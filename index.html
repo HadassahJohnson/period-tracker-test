@@ -8,29 +8,30 @@
         :root {
             --primary: #ff4d6d;
             --ovulation: #70e000;
-            --follicular: #caf0f8;
+            --fertile-bg: #f2ffeb;
             --bg: #fff0f3;
         }
-        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); display: flex; justify-content: center; padding: 20px; }
-        .card { background: white; padding: 2rem; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); width: 100%; max-width: 400px; }
-        h2 { color: var(--primary); text-align: center; }
-        .input-group { margin-bottom: 1.5rem; }
-        label { display: block; margin-bottom: 0.5rem; font-weight: bold; }
-        input { width: 100%; padding: 10px; border: 2px solid #eee; border-radius: 8px; box-sizing: border-box; }
-        button { width: 100%; padding: 12px; background: var(--primary); color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 1rem; transition: 0.3s; }
-        button:hover { background: #c9184a; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: var(--bg); display: flex; justify-content: center; padding: 20px; }
+        .card { background: white; padding: 1.5rem; border-radius: 24px; box-shadow: 0 10px 30px rgba(255, 77, 109, 0.15); width: 100%; max-width: 380px; }
+        h2 { color: var(--primary); text-align: center; margin-top: 0; font-weight: 800; }
+        .input-group { margin-bottom: 1rem; }
+        label { display: block; margin-bottom: 0.5rem; font-weight: 600; color: #444; font-size: 0.9rem; }
+        input { width: 100%; padding: 12px; border: 2px solid #ffe5ec; border-radius: 12px; box-sizing: border-box; font-size: 1rem; outline: none; }
+        input:focus { border-color: var(--primary); }
+        button { width: 100%; padding: 14px; background: var(--primary); color: white; border: none; border-radius: 12px; cursor: pointer; font-size: 1rem; font-weight: bold; transition: 0.2s; box-shadow: 0 4px 10px rgba(255, 77, 109, 0.3); }
+        button:active { transform: scale(0.98); }
         
-        .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; margin-top: 1.5rem; }
-        .day { aspect-ratio: 1; display: flex; align-items: center; justify-content: center; border-radius: 50%; font-size: 0.8rem; border: 1px solid #f0f0f0; position: relative; }
-        .day-name { font-weight: bold; color: #888; border: none; }
+        .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; margin-top: 1.5rem; }
+        .day { aspect-ratio: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; border-radius: 12px; font-size: 0.85rem; position: relative; transition: 0.3s; background: #fafafa; }
+        .day-name { font-weight: bold; color: #bbb; background: none; height: auto; padding-bottom: 5px; }
         
-        /* Prediction Colors */
-        .period { background: var(--primary) !important; color: white; }
-        .ovulation { border: 2px solid var(--ovulation) !important; font-weight: bold; }
-        .fertile { background: #e9ffdb; }
+        /* Prediction States */
+        .period { background: var(--primary) !important; color: white; font-weight: bold; box-shadow: 0 4px 8px rgba(255, 77, 109, 0.4); }
+        .ovulation { border: 2px solid var(--ovulation) !important; background: white; color: #2d6a4f; font-weight: bold; }
+        .fertile { background: var(--fertile-bg); color: #2d6a4f; }
         
-        .legend { margin-top: 1.5rem; font-size: 0.8rem; display: flex; gap: 10px; justify-content: center; }
-        .dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+        .legend { margin-top: 1.5rem; font-size: 0.75rem; display: flex; gap: 15px; justify-content: center; color: #666; }
+        .dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; margin-right: 4px; }
     </style>
 </head>
 <body>
@@ -39,31 +40,46 @@
     <h2>FlowTrack</h2>
     
     <div class="input-group">
-        <label>Last Period Start Date:</label>
+        <label>When did your last period start?</label>
         <input type="date" id="startDate">
     </div>
-    <button onclick="calculateCycle()">Predict My Cycle</button>
+    <button onclick="saveAndCalculate()">Update & Save</button>
 
     <div id="calendar" class="calendar-grid"></div>
 
     <div class="legend">
         <span><span class="dot" style="background: var(--primary)"></span> Period</span>
         <span><span class="dot" style="background: var(--ovulation)"></span> Ovulation</span>
+        <span><span class="dot" style="background: var(--fertile-bg); border: 1px solid #ddd"></span> Fertile</span>
     </div>
 </div>
 
 <script>
-    function calculateCycle() {
-        const startInput = document.getElementById('startDate').value;
-        if (!startInput) return alert("Please select a date!");
+    // 1. Check if a date was saved previously
+    window.onload = function() {
+        const savedDate = localStorage.getItem('lastPeriodDate');
+        if (savedDate) {
+            document.getElementById('startDate').value = savedDate;
+            renderCalendar(savedDate);
+        }
+    };
 
-        const calendarEl = document.getElementById('calendar');
-        calendarEl.innerHTML = ''; // Clear previous
+    function saveAndCalculate() {
+        const dateVal = document.getElementById('startDate').value;
+        if (!dateVal) return alert("Please select a date!");
         
-        const startDate = new Date(startInput);
+        // 2. Save the date to the browser's memory
+        localStorage.setItem('lastPeriodDate', dateVal);
+        renderCalendar(dateVal);
+    }
+
+    function renderCalendar(startInput) {
+        const calendarEl = document.getElementById('calendar');
+        calendarEl.innerHTML = ''; 
+        
+        const startDate = new Date(startInput + "T00:00:00"); // Fixes timezone shifts
         const cycleLength = 28;
         
-        // Add Day Labels
         ['S','M','T','W','T','F','S'].forEach(d => {
             const div = document.createElement('div');
             div.className = 'day day-name';
@@ -71,23 +87,21 @@
             calendarEl.appendChild(div);
         });
 
-        // Generate 35 days of predictions
-        for (let i = 0; i < 35; i++) {
+        // Generate 28 days (one full cycle)
+        for (let i = 0; i < 28; i++) {
             const currentDate = new Date(startDate);
             currentDate.setDate(startDate.getDate() + i);
             
             const dayDiv = document.createElement('div');
             dayDiv.className = 'day';
-            dayDiv.innerText = currentDate.getDate();
+            dayDiv.innerHTML = `<span>${currentDate.getDate()}</span>`;
 
-            const dayOfCycle = i % cycleLength;
-
-            // Logic for highlighting
-            if (dayOfCycle < 5) {
+            // Prediction Logic
+            if (i < 5) {
                 dayDiv.classList.add('period');
-            } else if (dayOfCycle === 13) {
+            } else if (i === 13) {
                 dayDiv.classList.add('ovulation');
-            } else if (dayOfCycle >= 10 && dayOfCycle <= 15) {
+            } else if (i >= 10 && i <= 15) {
                 dayDiv.classList.add('fertile');
             }
 
