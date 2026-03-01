@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FlowTrack Pro</title>
+    <style>
+        :root {
+            --primary: #ff4d6d;
+            --ovulation: #70e000;
+            --follicular: #caf0f8;
+            --bg: #fff0f3;
+        }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); display: flex; justify-content: center; padding: 20px; }
+        .card { background: white; padding: 2rem; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); width: 100%; max-width: 400px; }
+        h2 { color: var(--primary); text-align: center; }
+        .input-group { margin-bottom: 1.5rem; }
+        label { display: block; margin-bottom: 0.5rem; font-weight: bold; }
+        input { width: 100%; padding: 10px; border: 2px solid #eee; border-radius: 8px; box-sizing: border-box; }
+        button { width: 100%; padding: 12px; background: var(--primary); color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 1rem; transition: 0.3s; }
+        button:hover { background: #c9184a; }
+        
+        .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; margin-top: 1.5rem; }
+        .day { aspect-ratio: 1; display: flex; align-items: center; justify-content: center; border-radius: 50%; font-size: 0.8rem; border: 1px solid #f0f0f0; position: relative; }
+        .day-name { font-weight: bold; color: #888; border: none; }
+        
+        /* Prediction Colors */
+        .period { background: var(--primary) !important; color: white; }
+        .ovulation { border: 2px solid var(--ovulation) !important; font-weight: bold; }
+        .fertile { background: #e9ffdb; }
+        
+        .legend { margin-top: 1.5rem; font-size: 0.8rem; display: flex; gap: 10px; justify-content: center; }
+        .dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+    </style>
+</head>
+<body>
+
+<div class="card">
+    <h2>FlowTrack</h2>
+    
+    <div class="input-group">
+        <label>Last Period Start Date:</label>
+        <input type="date" id="startDate">
+    </div>
+    <button onclick="calculateCycle()">Predict My Cycle</button>
+
+    <div id="calendar" class="calendar-grid"></div>
+
+    <div class="legend">
+        <span><span class="dot" style="background: var(--primary)"></span> Period</span>
+        <span><span class="dot" style="background: var(--ovulation)"></span> Ovulation</span>
+    </div>
+</div>
+
+<script>
+    function calculateCycle() {
+        const startInput = document.getElementById('startDate').value;
+        if (!startInput) return alert("Please select a date!");
+
+        const calendarEl = document.getElementById('calendar');
+        calendarEl.innerHTML = ''; // Clear previous
+        
+        const startDate = new Date(startInput);
+        const cycleLength = 28;
+        
+        // Add Day Labels
+        ['S','M','T','W','T','F','S'].forEach(d => {
+            const div = document.createElement('div');
+            div.className = 'day day-name';
+            div.innerText = d;
+            calendarEl.appendChild(div);
+        });
+
+        // Generate 35 days of predictions
+        for (let i = 0; i < 35; i++) {
+            const currentDate = new Date(startDate);
+            currentDate.setDate(startDate.getDate() + i);
+            
+            const dayDiv = document.createElement('div');
+            dayDiv.className = 'day';
+            dayDiv.innerText = currentDate.getDate();
+
+            const dayOfCycle = i % cycleLength;
+
+            // Logic for highlighting
+            if (dayOfCycle < 5) {
+                dayDiv.classList.add('period');
+            } else if (dayOfCycle === 13) {
+                dayDiv.classList.add('ovulation');
+            } else if (dayOfCycle >= 10 && dayOfCycle <= 15) {
+                dayDiv.classList.add('fertile');
+            }
+
+            calendarEl.appendChild(dayDiv);
+        }
+    }
+</script>
+
+</body>
+</html>
