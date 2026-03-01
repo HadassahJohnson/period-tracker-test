@@ -1,0 +1,6 @@
+data class VitalSnapshot(
+    val date: Long,
+    val heartRate: Double,
+    val breathingRate: Double,
+    val bloodPressure: String // e.g., "120/80"
+)
